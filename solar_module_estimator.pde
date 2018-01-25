@@ -13,6 +13,7 @@
 //-----------------------------------------
 //overlay starts from top left x y
 //underlay should start from bottom right x y
+  final float mm_to_in_conversion_rate = 0.039370078740156994046;
   boolean virgin = true;
   boolean and_the_winner_is = false;
   
@@ -461,9 +462,18 @@ void setModulesArrays()
       moduleDimension_length_mm[trueCount] = float(pieces[5]);
       moduleDimension_width_mm[trueCount] = float(pieces[6]);
       moduleDimension_height_mm[trueCount] = float(pieces[7]);
-      moduleDimension_length_in[trueCount] = float(pieces[8]);
-      moduleDimension_width_in[trueCount] = float(pieces[9]);
-      moduleDimension_height_in[trueCount] = float(pieces[10]);
+      if (moduleDimension_length_mm[trueCount] != 0.0f)
+      {
+        moduleDimension_length_in[trueCount] = float(pieces[5])*mm_to_in_conversion_rate;
+        moduleDimension_width_in[trueCount] = float(pieces[6])*mm_to_in_conversion_rate;
+        moduleDimension_height_in[trueCount] = float(pieces[7])*mm_to_in_conversion_rate;
+      }
+      else
+      {
+        moduleDimension_length_in[trueCount] = float(pieces[8]);
+        moduleDimension_width_in[trueCount] = float(pieces[9]);
+        moduleDimension_height_in[trueCount] = float(pieces[10]);
+      }
       trueCount++;
     }
   }

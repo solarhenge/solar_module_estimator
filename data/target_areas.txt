@@ -1,4 +1,4 @@
-Select at least one	Side of the house	Center the panels?	Justify the panels?	Buffer N?	Buffer E?	Buffer S?	Buffer W?	Target area length (ft)	Target area length (in)	Target area width (ft)	Target area width (in)
+Select at least one	Side of the house	Center the modules?	Justify the modules?	Eavestrough N?	Eavestrough E?	Eavestrough S?	Eavestrough W?	Target area length (ft)	Target area length (in)	Target area width (ft)	Target area width (in)
 TRUE	East	TRUE	TRUE	FALSE	FALSE	FALSE	TRUE	18	1	12	4
 TRUE	South	TRUE	TRUE	FALSE	FALSE	TRUE	FALSE	11	6	23	4
 TRUE	West 1st Row Top 	TRUE	TRUE	FALSE	FALSE	FALSE	FALSE	9	7	6	11
