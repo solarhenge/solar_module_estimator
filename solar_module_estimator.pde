@@ -3,11 +3,13 @@
 // AUTHOR    : Jordan Machan
 // DATE (YYYY-MM-DD): 2017-12-30
 // PURPOSE: the purpose of this sketch is to do the following:
-// 1. reads and loads a TAB delimited target_area.txt file which represents roof areas for a particular house (sides of house)
+// 1. reads and loads a TAB delimited target_areas.txt file which represents roof areas for a particular house (sides of house)
 //    edit this file and enter the roof area measurements and ensure that the 'Select at least one' column has at least one TRUE value.
-// 2. reads and loads a TAB delimited solar_modules.txt file which represents the solar modules to compare
+// 2. reads and loads a TAB delimited modules.txt file which represents the solar modules to compare
 //    edit this file and enter the installation company, solar module, module type, power output and module dimensions and ensure that the 'Select only two' column has two and only two TRUE values.
-// Using the selected rows from the two files this program then draws the roof area that was selected factoring in setbacks for eavestroughs etc. The first two rectangles (roof area) represent using the first solar module selected 
+// 3. reads and loads a TAB delimited buffers.txt file which represents the buffers in inches that you want to the module to be away from the roof area edge
+//    edit this file and enter the buffer values that you want the module to be away from the roof area edge i.e. North, East, West, South side of a module and when you encounter an eavestrough.
+// Using these three files this program then draws the roof area that was selected factoring in setbacks for eavestroughs etc. The first two rectangles (roof area) represent using the first solar module selected 
 // and the last two rectangles (roof area) represent using the second solar module selected. The program determines the best fit with different orientations (i.e. landscape and portrait and a combination thereof).
 // The program then determines which rectangle/solar module combination is the winner when compared to the other solar module/rectangle combination based on total power output. 
 //-----------------------------------------
@@ -153,6 +155,7 @@
   int countmodulesTotal = 0;
   int countmodulesUnderlay = 0;
 
+// object name: 01 setup
 void setup() 
 {
   size(1300, 1300);
@@ -181,8 +184,18 @@ void setup()
     setModulesDetail();
     println("press up or down key to continue ...");
   }
-}
+} // 01 setup
 
+// object name: 02 draw
+void draw() 
+{
+  if (keyPressed == true)
+  {
+    drawRectangles(targetAreaIndex);
+  }
+} // 02 draw
+
+// object name: 03 keyPressed
 void keyPressed() 
 {
   if (key == CODED) {
@@ -220,8 +233,9 @@ void keyPressed()
       targetAreaIndex = 0;
     }
   }
-}
+} // 03 keyPressed
 
+// object name: 04 drawRectangles
 void drawRectangles(int targetAreaIndex)
 {
   if (and_the_winner_is)
@@ -240,465 +254,10 @@ void drawRectangles(int targetAreaIndex)
     drawModules(targetAreaIndex, 1, 3, "portrait");
     printTheWinner(targetAreaIndex);
   }
-}
-
-void draw() 
-{
-  if (keyPressed == true)
-  {
-    drawRectangles(targetAreaIndex);
-  }
-}
-
-int getTrueCount(String fileName)
-{
-  int retVal=0;
-  String[] lines;
-  lines = loadStrings(fileName);
-  for (int x=0; x < lines.length; x++)
-  {
-    String[] pieces = split(lines[x], '\t');
-    if (boolean(pieces[0]) == true)
-    {
-      retVal++;
-    }
-  }
-  return retVal;
-}
-
-void getTrueCounts()
-{
-  targetAreasTrueCount = getTrueCount(targetAreasFileName);
-  modulesTrueCount = getTrueCount(modulesFileName);
-  targetAreasFound = false;
-  modulesFound = false;
-  if (targetAreasTrueCount >= 1) targetAreasFound = true;
-  if (modulesTrueCount == 2) modulesFound = true;
-}
-
-void newSummaryArrays()
-{
-  totalModulesL = new int[targetAreasTrueCount];
-  totalModulesR = new int[targetAreasTrueCount];
-
-  powerOutputL = new int[targetAreasTrueCount];
-  powerOutputR = new int[targetAreasTrueCount];
-  
-  totalPowerOutputL = new int[targetAreasTrueCount];
-  totalPowerOutputR = new int[targetAreasTrueCount];
-}
-
-void newTargetAreasArrays()
-{
-  sideOfTheHouse = new String[targetAreasTrueCount];
-  centerThemodules = new boolean[targetAreasTrueCount];
-  justifyThemodules = new boolean[targetAreasTrueCount];
-  eavestroughN = new boolean[targetAreasTrueCount];
-  eavestroughE = new boolean[targetAreasTrueCount];
-  eavestroughS = new boolean[targetAreasTrueCount];
-  eavestroughW = new boolean[targetAreasTrueCount];
-  targetArea_length_ft = new int[targetAreasTrueCount];
-  targetArea_length_in = new int[targetAreasTrueCount];
-  targetArea_width_ft = new int[targetAreasTrueCount];
-  targetArea_width_in = new int[targetAreasTrueCount];
-  excelWinners = new String[targetAreasTrueCount];
-  excelLosers = new String[targetAreasTrueCount];
-}
-
-void newModulesArrays()
-{
-  installationCompanyName = new String[modulesTrueCount];
-  moduleCompanyName = new String[modulesTrueCount];
-  moduleType = new String[modulesTrueCount];
-  powerOutput = new int[modulesTrueCount];
-  moduleDimension_width_mm = new float[modulesTrueCount]; 
-  moduleDimension_length_mm = new float[modulesTrueCount]; 
-  moduleDimension_height_mm = new float[modulesTrueCount]; 
-  moduleDimension_width_in = new float[modulesTrueCount]; 
-  moduleDimension_length_in = new float[modulesTrueCount]; 
-  moduleDimension_height_in = new float[modulesTrueCount]; 
-  
-  module_length_ft = new int[modulesTrueCount];
-  module_length_in = new int[modulesTrueCount];
-  module_width_ft = new int[modulesTrueCount];
-  module_width_in = new int[modulesTrueCount];
-}
-
-void setTargetAreasDetail()
-{
-  int columnCount = 0;
-  String[] lines;
-  lines = loadStrings(targetAreasFileName);
-  for (int x=0; x < lines.length; x++)
-  {
-    String[] pieces = split(lines[x], '\t');
-    if (boolean(pieces[0]) == true)
-    {
-      for (int i=1; i < pieces.length; i++)
-      {
-        targetAreasDetail[columnCount] = pieces[i];
-        columnCount++;
-      }
-    }
-  }
-  printStringArray("targetAreasDetail", targetAreasDetail);
-}
-
-void setTargetAreasArrays()
-{
-  int columnCount = 11;
-  int trueCount = 0;
-  String[] lines;
-  lines = loadStrings(targetAreasFileName);
-  for (int x=0; x < lines.length; x++)
-  {
-    String[] pieces = split(lines[x], '\t');
-    if (boolean(pieces[0]) == true)
-    {
-      sideOfTheHouse[trueCount] = pieces[1];
-      centerThemodules[trueCount] = boolean(pieces[2]);
-      justifyThemodules[trueCount] = boolean(pieces[3]);
-      eavestroughN[trueCount] = boolean(pieces[4]);
-      eavestroughE[trueCount] = boolean(pieces[5]);
-      eavestroughS[trueCount] = boolean(pieces[6]);
-      eavestroughW[trueCount] = boolean(pieces[7]);
-      targetArea_length_ft[trueCount] = int(pieces[8]);
-      targetArea_length_in[trueCount] = int(pieces[9]);
-      targetArea_width_ft[trueCount] = int(pieces[10]);
-      targetArea_width_in[trueCount] = int(pieces[11]);
-      trueCount++;
-    }
-  }
-  targetAreasDetail = new String[columnCount*trueCount];
-  printStringArray("sideOfTheHouse", sideOfTheHouse);
-  printBooleanArray("centerThemodules", centerThemodules);
-  printBooleanArray("justifyThemodules", justifyThemodules);
-  printBooleanArray("eavestroughN", eavestroughN);
-  printBooleanArray("eavestroughE", eavestroughE);
-  printBooleanArray("eavestroughS", eavestroughS);
-  printBooleanArray("eavestroughW", eavestroughW);
-  printIntArray("targetArea_length_ft", targetArea_length_ft);
-  printIntArray("targetArea_length_in", targetArea_length_in);
-  printIntArray("targetArea_width_ft", targetArea_width_ft);
-  printIntArray("targetArea_width_in", targetArea_width_in);
-}
-
-void setModulesDetail()
-{
-  boolean left = true;
-  int columnCount;
-  String[] lines;
-  lines = loadStrings(modulesFileName);
-  for (int x=0; x < lines.length; x++)
-  {
-    columnCount = 0;
-    String[] pieces = split(lines[x], '\t');
-    if (boolean(pieces[0]) == true)
-    {
-      if (left)
-      {
-        left = false;
-        for (int i=1; i < pieces.length; i++)
-        {
-          modulesDetailL[columnCount] = pieces[i];
-          columnCount++;
-        }
-      }
-      else
-      {
-        for (int i=1; i < pieces.length; i++)
-        {
-          modulesDetailR[columnCount] = pieces[i];
-          columnCount++;
-        }
-      }
-    }
-  }
-  printStringArray("modulesDetailL", modulesDetailL);
-  printStringArray("modulesDetailR", modulesDetailR);
-}
-
-void setInchesToFeet()
-{
-  int feet=0;
-  int inches=0;
-  float conversionRate = 0.0833333;
-  float floatingFeet;
-  for (int i=0; i < modulesTrueCount; i++)
-  {
-    floatingFeet = moduleDimension_length_in[i]*conversionRate;
-    feet = int(floatingFeet);
-    inches = int(((floatingFeet) % feet)*12);
-    module_length_ft[i] = feet;
-    module_length_in[i] = inches;
-    
-    floatingFeet = moduleDimension_width_in[i]*conversionRate;
-    feet = int(floatingFeet);
-    inches = int(((floatingFeet) % feet)*12);
-    module_width_ft[i] = feet;
-    module_width_in[i] = inches;
-  }
-  printIntArray("module_length_ft", module_length_ft);
-  printIntArray("module_length_in", module_length_in);
-  printIntArray("module_width_ft", module_width_ft);
-  printIntArray("module_width_in", module_width_in);
-}
-
-void setModulesArrays()
-{
-  int columnCount = 10;
-  int trueCount = 0;
-  String[] lines;
-  lines = loadStrings(modulesFileName);
-  for (int x=0; x < lines.length; x++)
-  {
-    String[] pieces = split(lines[x], '\t');
-    if (boolean(pieces[0]) == true)
-    {
-      installationCompanyName[trueCount] = pieces[1];
-      moduleCompanyName[trueCount] = pieces[2];
-      moduleType[trueCount] = pieces[3];
-      powerOutput[trueCount] = int(pieces[4]);
-      moduleDimension_length_mm[trueCount] = float(pieces[5]);
-      moduleDimension_width_mm[trueCount] = float(pieces[6]);
-      moduleDimension_height_mm[trueCount] = float(pieces[7]);
-      if (moduleDimension_length_mm[trueCount] != 0.0f)
-      {
-        moduleDimension_length_in[trueCount] = float(pieces[5])*mm_to_in_conversion_rate;
-        moduleDimension_width_in[trueCount] = float(pieces[6])*mm_to_in_conversion_rate;
-        moduleDimension_height_in[trueCount] = float(pieces[7])*mm_to_in_conversion_rate;
-      }
-      else
-      {
-        moduleDimension_length_in[trueCount] = float(pieces[8]);
-        moduleDimension_width_in[trueCount] = float(pieces[9]);
-        moduleDimension_height_in[trueCount] = float(pieces[10]);
-      }
-      trueCount++;
-    }
-  }
-  modulesDetailL = new String[columnCount*(trueCount-1)];
-  modulesDetailR = new String[columnCount*(trueCount-1)];
-  printStringArray("installationCompanyName", installationCompanyName);
-  printStringArray("moduleCompanyName", moduleCompanyName);
-  printStringArray("moduleType", moduleType);
-  printIntArray("powerOutput", powerOutput);
-  printFloatArray("moduleDimension_length_mm", moduleDimension_length_mm);
-  printFloatArray("moduleDimension_width_mm", moduleDimension_width_mm);
-  printFloatArray("moduleDimension_height_mm", moduleDimension_height_mm);
-  printFloatArray("moduleDimension_length_in", moduleDimension_length_in);
-  printFloatArray("moduleDimension_width_in", moduleDimension_width_in);
-  printFloatArray("moduleDimension_height_in", moduleDimension_height_in);
-}
+} // 04 drawRectangles
 
 //------------------------------------------------------
-// object name: printErrors
-//
-// PURPOSE: 
-//        this function prints out errors
-// PARAMETERS:
-//        none
-// Returns:
-//        none
-//------------------------------------------------------
-void printErrors()
-{
-  if (!targetAreasFound)
-  {
-    println(targetAreasFileName+" "+targetAreasHeader[0]+" column has "+targetAreasTrueCount+" value(s) of 'TRUE'"); 
-  }
-  if (!modulesFound)
-  {
-    println(modulesFileName+" "+modulesHeader[0]+" column has "+modulesTrueCount+" value(s) of 'TRUE'"); 
-  }
-}
-
-//------------------------------------------------------
-// object name: setSizes
-//
-// PURPOSE: this function sets the following:
-//          1. setSizeBuffer
-//          2. setSizeRect
-//          3. setXY_Rect
-//          4. setXY_Module
-// PARAMETERS:
-//        none
-// Returns:
-//        none
-//------------------------------------------------------
-void setSizes(int targetAreaIndex)
-{
-  setSizeBuffer(targetAreaIndex);
-  setSizeRect(targetAreaIndex);
-  setXY_Rect();
-  setXY_Module();
-}
-
-void getBuffersHeader()
-{
-  String[] lines;
-
-  lines = loadStrings(buffersFileName);
-  for (int x=0; x < 1; x++)
-  {
-    String[] pieces = split(lines[x], '\t');
-    buffersHeader = new String[pieces.length];
-    for (int i=0; i < pieces.length; i++)
-    {
-      buffersHeader[i] = pieces[i];
-    }
-  }
-  printStringArray("buffersHeader", buffersHeader);
-}
-
-void getBuffersDetail()
-{
-  int whatever;
-  String[] lines;
-  lines = loadStrings(buffersFileName);
-  for (int x=1; x < 2; x++)
-  {
-    String[] pieces = split(lines[x], '\t');
-    buffersDetail = new String[pieces.length];
-    for (int i=0; i < pieces.length; i++)
-    {
-      buffersDetail[i] = pieces[i];
-      whatever = int(pieces[i]);
-      if (buffersHeader[i].equals("Buffer N")) obufferN = whatever;
-      if (buffersHeader[i].equals("Buffer E")) obufferE = whatever; 
-      if (buffersHeader[i].equals("Buffer S")) obufferS = whatever; 
-      if (buffersHeader[i].equals("Buffer W")) obufferW = whatever; 
-      if (buffersHeader[i].equals("Buffer Eavestrough")) bufferEavestrough = whatever; 
-    }
-  }
-  printStringArray("buffersDetail", buffersDetail);
-}
-
-//------------------------------------------------------
-// object name: setSizeBuffer
-//
-// PURPOSE: this function sets the buffer sizes
-// PARAMETERS:
-//        none
-// Returns:
-//        none
-//------------------------------------------------------
-void setSizeBuffer(int targetAreaIndex)
-{
-  nbufferN = obufferN;
-  nbufferE = obufferE;
-  nbufferS = obufferS;
-  nbufferW = obufferW;
-  if (eavestroughN[targetAreaIndex]) nbufferN = bufferEavestrough;
-  if (eavestroughE[targetAreaIndex]) nbufferE = bufferEavestrough;
-  if (eavestroughS[targetAreaIndex]) nbufferS = bufferEavestrough;
-  if (eavestroughW[targetAreaIndex]) nbufferW = bufferEavestrough;
-}
-
-//------------------------------------------------------
-// object name: setSizeRect
-//
-// PURPOSE: this function sets the big and inner rectangle size
-// PARAMETERS:
-//        none
-// Returns:
-//        none
-//------------------------------------------------------
-void setSizeRect(int targetAreaIndex)
-{
-  rectBigWidth = (targetArea_width_ft[targetAreaIndex]*12)+targetArea_width_in[targetAreaIndex];
-  rectBigLength = (targetArea_length_ft[targetAreaIndex]*12)+targetArea_length_in[targetAreaIndex];
-  rectInnerWidth = rectBigWidth - (nbufferW+nbufferE);
-  rectInnerLength = rectBigLength - (nbufferN+nbufferS);
-}
-
-//------------------------------------------------------
-// object name: setXY_Rect
-//
-// PURPOSE: this function sets the big and inner rectangle x y starting coordinates
-// PARAMETERS:
-//        none
-// Returns:
-//        none
-//------------------------------------------------------
-void setXY_Rect()
-{
-  for (int i = 0; i < rectBigX.length; i++)
-  {
-    rectBigX[i] = rectBigWidth*i+rectSpacerVertical*i+WHITE_SPACE;
-    rectBigY[i] = 0;
-    
-    rectInnerX[i] = rectBigWidth*i+rectSpacerVertical*i+WHITE_SPACE+nbufferW;
-    rectInnerY[i] = nbufferN;
-  }
-  for (int i = 0; i < roofVentX.length; i++)
-  {
-    roofVentX[i] = rectBigWidth*i+rectSpacerVertical*i+WHITE_SPACE+nbufferW;
-    roofVentY[i] = nbufferN;
-  }
-}    
-
-//------------------------------------------------------
-// object name: setXY_Module
-//
-// PURPOSE: this function sets the landscape and portrait solar module x y starting coordinates
-// PARAMETERS:
-//        none
-// Returns:
-//        none
-//------------------------------------------------------
-void setXY_Module()
-{
-  moduleLandX[0] = int(rectInnerLength/moduleDimension_width_in[0]);
-  moduleLandY[0] = int(rectInnerWidth/moduleDimension_length_in[0]);
-  moduleLandX[1] = int(rectInnerLength/moduleDimension_width_in[1]);
-  moduleLandY[1] = int(rectInnerWidth/moduleDimension_length_in[1]);
-  modulePortX[0] = int(rectInnerWidth/moduleDimension_width_in[0]);
-  modulePortY[0] = int(rectInnerLength/moduleDimension_length_in[0]);
-  modulePortX[1] = int(rectInnerWidth/moduleDimension_width_in[1]);
-  modulePortY[1] = int(rectInnerLength/moduleDimension_length_in[1]);
-}
-
-//------------------------------------------------------
-// object name: roofVents
-//
-// PURPOSE: this function creates the roof vent shape
-// PARAMETERS:
-//        none
-// Returns:
-//        none
-//------------------------------------------------------
-void roofVents()
-{
-  fill(255);
-  for (int i = 0; i < roofVentX.length; i++)
-  {
-    println("roofVentX["+i+"] = "+roofVentX[i]);
-    println("roofVentY["+i+"] = "+roofVentY[i]);
-    roofVent = createShape(RECT, roofVentX[i], roofVentY[i], ROOF_VENT_WIDTH_IN, ROOF_VENT_LENGTH_IN);
-    shape(roofVent);
-  }
-}  
-
-//------------------------------------------------------
-// object name: initmoduleCounts
-//
-// PURPOSE: this function initializes the module counts to zero
-// PARAMETERS:
-//        none
-// Returns:
-//        none
-//------------------------------------------------------
-void initmoduleCounts()
-{
-  countmodulesAdditional = 0;
-  countmodulesUnderlay = 0;
-  countmodulesOverlay = 0;
-  countmodulesTotal = 0;
-}
-
-//------------------------------------------------------
-// object name: countAdditionalmodules
+// object name: countAdditionalModules
 //
 // PURPOSE: this function counts if there are underlaying modules that fit in the roof area without impacting the overlaying modules
 // PARAMETERS:
@@ -706,7 +265,7 @@ void initmoduleCounts()
 // Returns:
 //        none
 //------------------------------------------------------
-void countAdditionalmodules()
+void countAdditionalModules()
 {
   boolean addmodule = true;
   float x1;
@@ -764,57 +323,7 @@ void countAdditionalmodules()
     }
   }
   countmodulesTotal = countmodulesOverlay+countmodulesAdditional;
-}
-
-//------------------------------------------------------
-// object name: popArrays
-//
-// PURPOSE: this function populates the underlay and overlay modules
-// PARAMETERS:
-//        boolean underlay - if true  populate the underlay solar modules with the supplied x y coordinates and solar module dimensions 
-//                           if false populate the overlay  solar modules with the supplied x y coordinates and solar module dimensions
-//        float topLeftX - top left x coordinate
-//        float topLeftY - top left y coordinate
-//        float ModuleWidth - solar module width
-//        float ModuleLength - solar module length
-// Returns:
-//        none
-//------------------------------------------------------
-void popArrays(boolean underlay, float topLeftX, float topLeftY, float ModuleWidth, float ModuleLength)
-{
-  if (debug)
-  {
-    println("popArrays begin");
-    println("underlay = "+underlay);
-    println("topLeftX = "+topLeftX);
-    println("topLeftY = "+topLeftY);
-    println("ModuleWidth = "+ModuleWidth);
-    println("ModuleLength = "+ModuleLength);
-  }
-  if (underlay)
-  {
-    underShapeX[countmodulesUnderlay] = topLeftX;
-    underShapeY[countmodulesUnderlay] = topLeftY;
-    underShapeWidth[countmodulesUnderlay] = ModuleWidth;
-    underShapeLength[countmodulesUnderlay] = ModuleLength;
-    countmodulesUnderlay++;
-  }
-  else
-  {
-    overShapeX[countmodulesOverlay] = topLeftX;
-    overShapeY[countmodulesOverlay] = topLeftY;
-    overShapeWidth[countmodulesOverlay] = ModuleWidth;
-    overShapeLength[countmodulesOverlay] = ModuleLength;
-    countmodulesOverlay++;
-  }
-}        
-
-boolean determineJustification()
-{
-  boolean leftJustify = true;
-  if (rectInnerWidth > rectInnerLength) leftJustify = false;
-  return leftJustify;
-}  
+} // countAdditionalModules
 
 //------------------------------------------------------
 // object name: doLandscape
@@ -847,7 +356,7 @@ void doLandscape(int targetAreaIndex, boolean underlay, float bottomRightX, floa
   float totalmoduleWidth;
   
   boolean leftJustify = false;
-  leftJustify = determineJustification();
+  leftJustify = getLeftJustify();
 
   if (!underlay)
   {
@@ -885,7 +394,7 @@ void doLandscape(int targetAreaIndex, boolean underlay, float bottomRightX, floa
         floatY = posY+topLeftY;
         rectModule = createShape(RECT, floatX, floatY, moduleWidth,  moduleLength );
         shape(rectModule);
-        popArrays(underlay, floatX, floatY, moduleWidth, moduleLength);
+        setArrays(underlay, floatX, floatY, moduleWidth, moduleLength);
       }
     }
   }
@@ -923,11 +432,11 @@ void doLandscape(int targetAreaIndex, boolean underlay, float bottomRightX, floa
         posY = (bottomRightY-posY)-moduleLength;
         rectModule = createShape(RECT, posX, posY, moduleWidth, moduleLength);
         shape(rectModule);
-        popArrays(underlay, posX, posY, moduleWidth, moduleLength);
+        setArrays(underlay, posX, posY, moduleWidth, moduleLength);
       }
     }
   }
-}
+} // doLandscape
 
 //------------------------------------------------------
 // object name: doPortrait
@@ -960,7 +469,7 @@ void doPortrait(int targetAreaIndex, boolean underlay, float bottomRightX, float
   float totalmoduleWidth;
 
   boolean leftJustify = false;
-  leftJustify = determineJustification();
+  leftJustify = getLeftJustify();
 
   if (!underlay)
   {
@@ -997,7 +506,7 @@ void doPortrait(int targetAreaIndex, boolean underlay, float bottomRightX, float
         floatY = posY+topLeftY;
         rectModule = createShape(RECT, floatX, floatY, moduleWidth, moduleLength);
         shape(rectModule);
-        popArrays(underlay, floatX, floatY, moduleWidth, moduleLength);
+        setArrays(underlay, floatX, floatY, moduleWidth, moduleLength);
       }
     }
   }
@@ -1036,11 +545,11 @@ void doPortrait(int targetAreaIndex, boolean underlay, float bottomRightX, float
         posY = (bottomRightY-posY)-moduleLength;
         rectModule = createShape(RECT, posX, posY, moduleWidth, moduleLength);
         shape(rectModule);
-        popArrays(underlay, posX, posY, moduleWidth, moduleLength);
+        setArrays(underlay, posX, posY, moduleWidth, moduleLength);
       }
     }
   }
-}
+} // doPortrait
 
 //------------------------------------------------------
 // object name: drawModules
@@ -1066,7 +575,7 @@ void drawModules(int targetAreaIndex, int moduleNumber, int rectNumber, String f
   rectInner = createShape(RECT, rectInnerX[rectNumber], rectInnerY[rectNumber], rectInnerWidth, rectInnerLength);
   shape(rectBig);
   shape(rectInner);
-  initmoduleCounts();
+  setModulesCounts();
   bottomRightX = rectInnerX[rectNumber]+rectInnerWidth;
   bottomRightY = rectInnerY[rectNumber]+rectInnerLength;
   topLeftX = rectInnerX[rectNumber];
@@ -1090,11 +599,356 @@ void drawModules(int targetAreaIndex, int moduleNumber, int rectNumber, String f
     underlay = false;
     doPortrait(targetAreaIndex, underlay, bottomRightX, bottomRightY, topLeftX, topLeftY, modulePortX[moduleNumber], modulePortY[moduleNumber], moduleDimension_width_in[moduleNumber], moduleDimension_length_in[moduleNumber]);
   }
-  countAdditionalmodules();
+  countAdditionalModules();
   textX = rectBigWidth*rectNumber+rectSpacerVertical*rectNumber;
   textY = rectBigLength;
   printResults(targetAreaIndex, rectNumber, finalOrientation, moduleType[moduleNumber], countmodulesOverlay, countmodulesAdditional, powerOutput[moduleNumber]);
-} //drawModules end
+} // drawModules
+
+//------------------------------------------------------
+// object name: drawRoofVents
+//
+// PURPOSE: this function creates the roof vent shape
+// PARAMETERS:
+//        none
+// Returns:
+//        none
+//------------------------------------------------------
+void drawRoofVents()
+{
+  fill(255);
+  for (int i = 0; i < roofVentX.length; i++)
+  {
+    println("roofVentX["+i+"] = "+roofVentX[i]);
+    println("roofVentY["+i+"] = "+roofVentY[i]);
+    roofVent = createShape(RECT, roofVentX[i], roofVentY[i], ROOF_VENT_WIDTH_IN, ROOF_VENT_LENGTH_IN);
+    shape(roofVent);
+  }
+} // drawRoofVents
+
+// object name: getBuffersHeader
+void getBuffersHeader()
+{
+  String[] lines;
+
+  lines = loadStrings(buffersFileName);
+  for (int x=0; x < 1; x++)
+  {
+    String[] pieces = split(lines[x], '\t');
+    buffersHeader = new String[pieces.length];
+    for (int i=0; i < pieces.length; i++)
+    {
+      buffersHeader[i] = pieces[i];
+    }
+  }
+  printArrayString("buffersHeader", buffersHeader);
+} // getBuffersHeader
+
+// object name: getBuffersDetail
+void getBuffersDetail()
+{
+  int whatever;
+  String[] lines;
+  lines = loadStrings(buffersFileName);
+  for (int x=1; x < 2; x++)
+  {
+    String[] pieces = split(lines[x], '\t');
+    buffersDetail = new String[pieces.length];
+    for (int i=0; i < pieces.length; i++)
+    {
+      buffersDetail[i] = pieces[i];
+      whatever = int(pieces[i]);
+      if (buffersHeader[i].equals("Buffer N")) obufferN = whatever;
+      if (buffersHeader[i].equals("Buffer E")) obufferE = whatever; 
+      if (buffersHeader[i].equals("Buffer S")) obufferS = whatever; 
+      if (buffersHeader[i].equals("Buffer W")) obufferW = whatever; 
+      if (buffersHeader[i].equals("Buffer Eavestrough")) bufferEavestrough = whatever; 
+    }
+  }
+  printArrayString("buffersDetail", buffersDetail);
+} // getBuffersDetail
+
+// object name: getLeftJustify
+boolean getLeftJustify()
+{
+  boolean leftJustify = true;
+  if (rectInnerWidth > rectInnerLength) leftJustify = false;
+  return leftJustify;
+} // getLeftJustify 
+
+// object name: getModulesHeader
+void getModulesHeader()
+{
+  String[] lines;
+
+  lines = loadStrings(modulesFileName);
+  for (int x=0; x < 1; x++)
+  {
+    String[] pieces = split(lines[x], '\t');
+    modulesHeader = new String[pieces.length-1];
+    for (int i=1; i < pieces.length; i++)
+    {
+      modulesHeader[i-1] = pieces[i];
+    }
+  }
+  printArrayString("modulesHeader", modulesHeader);
+} // getModulesHeader
+
+// object name: getTargetAreasHeader
+void getTargetAreasHeader()
+{
+  String[] lines;
+
+  lines = loadStrings(targetAreasFileName);
+  for (int x=0; x < 1; x++)
+  {
+    String[] pieces = split(lines[x], '\t');
+    targetAreasHeader = new String[pieces.length-1];
+    for (int i=1; i < pieces.length; i++)
+    {
+      targetAreasHeader[i-1] = pieces[i];
+    }
+  }
+  printArrayString("targetAreasHeader", targetAreasHeader);
+} // getTargetAreasHeader
+
+// object name: getTrueCount
+int getTrueCount(String fileName)
+{
+  int retVal=0;
+  String[] lines;
+  lines = loadStrings(fileName);
+  for (int x=0; x < lines.length; x++)
+  {
+    String[] pieces = split(lines[x], '\t');
+    if (boolean(pieces[0]) == true)
+    {
+      retVal++;
+    }
+  }
+  return retVal;
+} // getTrueCount
+
+// object name: getTrueCounts
+void getTrueCounts()
+{
+  targetAreasTrueCount = getTrueCount(targetAreasFileName);
+  modulesTrueCount = getTrueCount(modulesFileName);
+  targetAreasFound = false;
+  modulesFound = false;
+  if (targetAreasTrueCount >= 1) targetAreasFound = true;
+  if (modulesTrueCount == 2) modulesFound = true;
+} // getTrueCounts
+
+// object name: newModulesArrays
+void newModulesArrays()
+{
+  installationCompanyName = new String[modulesTrueCount];
+  moduleCompanyName = new String[modulesTrueCount];
+  moduleType = new String[modulesTrueCount];
+  powerOutput = new int[modulesTrueCount];
+  moduleDimension_width_mm = new float[modulesTrueCount]; 
+  moduleDimension_length_mm = new float[modulesTrueCount]; 
+  moduleDimension_height_mm = new float[modulesTrueCount]; 
+  moduleDimension_width_in = new float[modulesTrueCount]; 
+  moduleDimension_length_in = new float[modulesTrueCount]; 
+  moduleDimension_height_in = new float[modulesTrueCount]; 
+  
+  module_length_ft = new int[modulesTrueCount];
+  module_length_in = new int[modulesTrueCount];
+  module_width_ft = new int[modulesTrueCount];
+  module_width_in = new int[modulesTrueCount];
+} // newModulesArrays
+
+// object name: newSummaryArrays
+void newSummaryArrays()
+{
+  totalModulesL = new int[targetAreasTrueCount];
+  totalModulesR = new int[targetAreasTrueCount];
+
+  powerOutputL = new int[targetAreasTrueCount];
+  powerOutputR = new int[targetAreasTrueCount];
+  
+  totalPowerOutputL = new int[targetAreasTrueCount];
+  totalPowerOutputR = new int[targetAreasTrueCount];
+} // newSummaryArrays
+
+// object name: newTargetAreasArrays
+void newTargetAreasArrays()
+{
+  sideOfTheHouse = new String[targetAreasTrueCount];
+  centerThemodules = new boolean[targetAreasTrueCount];
+  justifyThemodules = new boolean[targetAreasTrueCount];
+  eavestroughN = new boolean[targetAreasTrueCount];
+  eavestroughE = new boolean[targetAreasTrueCount];
+  eavestroughS = new boolean[targetAreasTrueCount];
+  eavestroughW = new boolean[targetAreasTrueCount];
+  targetArea_length_ft = new int[targetAreasTrueCount];
+  targetArea_length_in = new int[targetAreasTrueCount];
+  targetArea_width_ft = new int[targetAreasTrueCount];
+  targetArea_width_in = new int[targetAreasTrueCount];
+  excelWinners = new String[targetAreasTrueCount];
+  excelLosers = new String[targetAreasTrueCount];
+} // newTargetAreasArrays
+
+// object name: printArrayBoolean
+void printArrayBoolean(String arrayName, boolean[] arrayValue)
+{
+  for (int i=0; i<arrayValue.length; i++)
+  {
+    if (debug) println(arrayName+"["+i+"] = "+arrayValue[i]);
+  }
+} // printArrayBoolean
+
+// object name: printArrayFloat
+void printArrayFloat(String arrayName, float[] arrayValue)
+{
+  for (int i=0; i<arrayValue.length; i++)
+  {
+    if (debug) println(arrayName+"["+i+"] = "+arrayValue[i]);
+  }
+} // printArrayFloat
+
+// object name: printArrayInt
+void printArrayInt(String arrayName, int[] arrayValue)
+{
+  for (int i=0; i<arrayValue.length; i++)
+  {
+    if (debug) println(arrayName+"["+i+"] = "+arrayValue[i]);
+  }
+} // printArrayInt
+
+// object name: printArrayString
+void printArrayString(String arrayName, String[] arrayValue)
+{
+  for (int i=0; i<arrayValue.length; i++)
+  {
+    if (debug) println(arrayName+"["+i+"] = "+arrayValue[i]);
+  }
+} // printArrayString
+
+//------------------------------------------------------
+// object name: printErrors
+//
+// PURPOSE: 
+//        this function prints out errors
+// PARAMETERS:
+//        none
+// Returns:
+//        none
+//------------------------------------------------------
+void printErrors()
+{
+  if (!targetAreasFound)
+  {
+    println(targetAreasFileName+" "+targetAreasHeader[0]+" column has "+targetAreasTrueCount+" value(s) of 'TRUE'"); 
+  }
+  if (!modulesFound)
+  {
+    println(modulesFileName+" "+modulesHeader[0]+" column has "+modulesTrueCount+" value(s) of 'TRUE'"); 
+  }
+} // printErrors
+
+// object name: printExcel
+void printExcel()
+{
+  if (excelWinners[targetAreasTrueCount-1] != null)
+  {
+    if (readyToPrint)
+    {
+      readyToPrint = false;
+      String excelHDR = "Excel 1HDR"+TAB+"Module Type"+TAB+"Side Of The House"+TAB+"Total modules"+TAB+"Power Output (W)"+TAB+"Total Power Output (W)";
+      println(excelHDR);
+      for (int i=0; i < excelWinners.length; i++)
+      {
+        println(excelWinners[i]);
+        println(excelLosers[i]);
+      }
+    }
+  }
+} // printExcel
+
+// object name: printExcel_2DTL
+void printExcel_2DTL(int targetAreaIndex, boolean winner, String moduleType, String sideOfTheHouse, int totalModules, int powerOutput, int totalPowerOutput)
+{
+  if (winner) excelWinners[targetAreaIndex] = "Excel 2DTL"+TAB+moduleType+TAB+sideOfTheHouse+TAB+totalModules+TAB+powerOutput+TAB+totalPowerOutput;
+  if (!winner) excelLosers[targetAreaIndex] = "Excel 2DTL"+TAB+moduleType+TAB+sideOfTheHouse+TAB+totalModules+TAB+powerOutput+TAB+totalPowerOutput;
+} // printExcel_2DTL
+
+// object name: printModuleLengthWidth
+void printModuleLengthWidth(boolean left)
+{
+  int index = 0;
+  String textLine;
+
+  if (left) index = 0;
+  if (!left) index = 1;
+  
+  textY = textY+ADD_PIXELS;
+  textLine = "Module length (ft)"+COLON+module_length_ft[index];
+  text(textLine,textX,textY);
+  
+  textY = textY+ADD_PIXELS;
+  textLine = "Module length (in)"+COLON+module_length_in[index];
+  text(textLine,textX,textY);
+
+  textY = textY+ADD_PIXELS;
+  textLine = "Module width (ft)"+COLON+module_width_ft[index];
+  text(textLine,textX,textY);
+  
+  textY = textY+ADD_PIXELS;
+  textLine = "Module width (in)"+COLON+module_width_in[index];
+  text(textLine,textX,textY);
+} // printModuleLengthWidth
+
+// object name: printParametersBuffers
+void printParametersBuffers()
+{
+  String   textLine;
+  textY = textY+ADD_PIXELS;
+  textLine = buffersFileName+" parameters";
+  text(textLine,textX,textY);
+  for (int i=0; i < buffersHeader.length; i++)
+  {
+    textY = textY+ADD_PIXELS;
+    textLine = buffersHeader[i]+COLON+buffersDetail[i];
+    text(textLine,textX,textY);
+  }
+} // printParametersBuffers
+
+// object name: printParametersModules
+void printParametersModules(boolean left)
+{
+  String   textLine;
+  textY = textY+ADD_PIXELS;
+  textLine = modulesFileName+" parameters";
+  text(textLine,textX,textY);
+  for (int i=0; i < modulesHeader.length; i++)
+  {
+    textY = textY+ADD_PIXELS;
+    textLine = modulesHeader[i]+COLON;
+    if (left) textLine = textLine+modulesDetailL[i];
+    if (!left) textLine = textLine+modulesDetailR[i];
+    text(textLine,textX,textY);
+  }
+} // printParametersModules
+
+// object name: printParametersTargetAreas
+void printParametersTargetAreas(int targetAreaIndex)
+{
+  int columnCount = targetAreasHeader.length;
+  int index = columnCount*targetAreaIndex;
+  String   textLine;
+  textY = textY+ADD_PIXELS;
+  textLine = targetAreasFileName+" parameters";
+  text(textLine,textX,textY);
+  for (int i=0; i < targetAreasHeader.length; i++)
+  {
+    textY = textY+ADD_PIXELS;
+    textLine = targetAreasHeader[i]+COLON+targetAreasDetail[i+index];
+    text(textLine,textX,textY);
+  }
+} // printParametersTargetAreas
 
 //------------------------------------------------------
 // object name: printResults
@@ -1151,103 +1005,9 @@ void printResults(int targetAreaIndex, int rectNumber, String finalOrientation, 
     rightPowerOutput[rectNumber-2] = powerOutput;
     rightTotalPowerOutput[rectNumber-2] = countmodulesTotal*powerOutput;
   }
-}
+} // printResults
 
-void printBuffersParameters()
-{
-  String   textLine;
-  textY = textY+ADD_PIXELS;
-  textLine = buffersFileName+" parameters";
-  text(textLine,textX,textY);
-  for (int i=0; i < buffersHeader.length; i++)
-  {
-    textY = textY+ADD_PIXELS;
-    textLine = buffersHeader[i]+COLON+buffersDetail[i];
-    text(textLine,textX,textY);
-  }
-}
-
-void printTargetAreasParameters(int targetAreaIndex)
-{
-  int columnCount = targetAreasHeader.length;
-  int index = columnCount*targetAreaIndex;
-  String   textLine;
-  textY = textY+ADD_PIXELS;
-  textLine = targetAreasFileName+" parameters";
-  text(textLine,textX,textY);
-  for (int i=0; i < targetAreasHeader.length; i++)
-  {
-    textY = textY+ADD_PIXELS;
-    textLine = targetAreasHeader[i]+COLON+targetAreasDetail[i+index];
-    text(textLine,textX,textY);
-  }
-}
-
-void printModuleLengthWidth(boolean left)
-{
-  int index = 0;
-  String textLine;
-
-  if (left) index = 0;
-  if (!left) index = 1;
-  
-  textY = textY+ADD_PIXELS;
-  textLine = "Module length (ft)"+COLON+module_length_ft[index];
-  text(textLine,textX,textY);
-  
-  textY = textY+ADD_PIXELS;
-  textLine = "Module length (in)"+COLON+module_length_in[index];
-  text(textLine,textX,textY);
-
-  textY = textY+ADD_PIXELS;
-  textLine = "Module width (ft)"+COLON+module_width_ft[index];
-  text(textLine,textX,textY);
-  
-  textY = textY+ADD_PIXELS;
-  textLine = "Module width (in)"+COLON+module_width_in[index];
-  text(textLine,textX,textY);
-}
-
-void printModulesParameters(boolean left)
-{
-  String   textLine;
-  textY = textY+ADD_PIXELS;
-  textLine = modulesFileName+" parameters";
-  text(textLine,textX,textY);
-  for (int i=0; i < modulesHeader.length; i++)
-  {
-    textY = textY+ADD_PIXELS;
-    textLine = modulesHeader[i]+COLON;
-    if (left) textLine = textLine+modulesDetailL[i];
-    if (!left) textLine = textLine+modulesDetailR[i];
-    text(textLine,textX,textY);
-  }
-}
-
-void excel_2DTL(int targetAreaIndex, boolean winner, String moduleType, String sideOfTheHouse, int totalModules, int powerOutput, int totalPowerOutput)
-{
-  if (winner) excelWinners[targetAreaIndex] = "Excel 2DTL"+TAB+moduleType+TAB+sideOfTheHouse+TAB+totalModules+TAB+powerOutput+TAB+totalPowerOutput;
-  if (!winner) excelLosers[targetAreaIndex] = "Excel 2DTL"+TAB+moduleType+TAB+sideOfTheHouse+TAB+totalModules+TAB+powerOutput+TAB+totalPowerOutput;
-}
-
-void printExcel()
-{
-  if (excelWinners[targetAreasTrueCount-1] != null)
-  {
-    if (readyToPrint)
-    {
-      readyToPrint = false;
-      String excelHDR = "Excel 1HDR"+TAB+"Module Type"+TAB+"Side Of The House"+TAB+"Total modules"+TAB+"Power Output (W)"+TAB+"Total Power Output (W)";
-      println(excelHDR);
-      for (int i=0; i < excelWinners.length; i++)
-      {
-        println(excelWinners[i]);
-        println(excelLosers[i]);
-      }
-    }
-  }
-}
-
+// object name: printSummary
 void printSummary()
 {
   boolean left = true;
@@ -1280,7 +1040,7 @@ void printSummary()
   textLine = "LEFT MODULE";
   text(textLine,textX,textY);
   left = true;
-  printModulesParameters(left);
+  printParametersModules(left);
   for (int i=0; i < totalModulesL.length; i++)
   {
     textY = textY+ADD_PIXELS;
@@ -1299,7 +1059,7 @@ void printSummary()
   textLine = "RIGHT MODULE";
   text(textLine,textX,textY);
   left = false;
-  printModulesParameters(left);
+  printParametersModules(left);
   for (int i=0; i < totalModulesR.length; i++)
   {
     textY = textY+ADD_PIXELS;
@@ -1328,7 +1088,7 @@ void printSummary()
   textLine = andTheWinnerIs;
   text(textLine,textX,textY);
   textY = textY+ADD_PIXELS;
-}
+} // printSummary
 
 //------------------------------------------------------
 // object name: printTheWinner
@@ -1434,10 +1194,10 @@ void printTheWinner(int targetAreaIndex)
   textX = textX+WHITE_SPACE;
   
   textY = textY+ADD_PIXELS;
-  printBuffersParameters();
+  printParametersBuffers();
 
   textY = textY+ADD_PIXELS;
-  printTargetAreasParameters(targetAreaIndex);
+  printParametersTargetAreas(targetAreaIndex);
 
   textY = textY+ADD_PIXELS;
   textY = textY+ADD_PIXELS;
@@ -1445,7 +1205,7 @@ void printTheWinner(int targetAreaIndex)
   text(textLine,textX,textY);
 
   textY = textY+ADD_PIXELS;
-  printModulesParameters(left);
+  printParametersModules(left);
   printModuleLengthWidth(left);
   
   textY = textY+ADD_PIXELS;
@@ -1463,73 +1223,345 @@ void printTheWinner(int targetAreaIndex)
   textLine = "Total Power Output Difference (W)"+COLON+diffTotalPowerOutput;
   text(textLine,textX,textY);
 
-  excel_2DTL(targetAreaIndex, true, winnerModuleType, sideOfTheHouse[targetAreaIndex], winnerTotalModules, winnerPowerOutput, winnerTotalPowerOutput);
-  excel_2DTL(targetAreaIndex, false, loserModuleType, sideOfTheHouse[targetAreaIndex], loserTotalModules, loserPowerOutput, loserTotalPowerOutput);
+  printExcel_2DTL(targetAreaIndex, true, winnerModuleType, sideOfTheHouse[targetAreaIndex], winnerTotalModules, winnerPowerOutput, winnerTotalPowerOutput);
+  printExcel_2DTL(targetAreaIndex, false, loserModuleType, sideOfTheHouse[targetAreaIndex], loserTotalModules, loserPowerOutput, loserTotalPowerOutput);
   printExcel();
-}
+} // printTheWinner
 
-void printBooleanArray(String arrayName, boolean[] arrayValue)
+//------------------------------------------------------
+// object name: setArrays
+//
+// PURPOSE: this function populates the underlay and overlay modules
+// PARAMETERS:
+//        boolean underlay - if true  populate the underlay solar modules with the supplied x y coordinates and solar module dimensions 
+//                           if false populate the overlay  solar modules with the supplied x y coordinates and solar module dimensions
+//        float topLeftX - top left x coordinate
+//        float topLeftY - top left y coordinate
+//        float ModuleWidth - solar module width
+//        float ModuleLength - solar module length
+// Returns:
+//        none
+//------------------------------------------------------
+void setArrays(boolean underlay, float topLeftX, float topLeftY, float ModuleWidth, float ModuleLength)
 {
-  for (int i=0; i<arrayValue.length; i++)
+  if (debug)
   {
-    if (debug) println(arrayName+"["+i+"] = "+arrayValue[i]);
+    println("setArrays begin");
+    println("underlay = "+underlay);
+    println("topLeftX = "+topLeftX);
+    println("topLeftY = "+topLeftY);
+    println("ModuleWidth = "+ModuleWidth);
+    println("ModuleLength = "+ModuleLength);
   }
-}
-
-void printFloatArray(String arrayName, float[] arrayValue)
-{
-  for (int i=0; i<arrayValue.length; i++)
+  if (underlay)
   {
-    if (debug) println(arrayName+"["+i+"] = "+arrayValue[i]);
+    underShapeX[countmodulesUnderlay] = topLeftX;
+    underShapeY[countmodulesUnderlay] = topLeftY;
+    underShapeWidth[countmodulesUnderlay] = ModuleWidth;
+    underShapeLength[countmodulesUnderlay] = ModuleLength;
+    countmodulesUnderlay++;
   }
-}
-
-void printIntArray(String arrayName, int[] arrayValue)
-{
-  for (int i=0; i<arrayValue.length; i++)
+  else
   {
-    if (debug) println(arrayName+"["+i+"] = "+arrayValue[i]);
+    overShapeX[countmodulesOverlay] = topLeftX;
+    overShapeY[countmodulesOverlay] = topLeftY;
+    overShapeWidth[countmodulesOverlay] = ModuleWidth;
+    overShapeLength[countmodulesOverlay] = ModuleLength;
+    countmodulesOverlay++;
   }
-}
+} // setArrays        
 
-void printStringArray(String arrayName, String[] arrayValue)
+// object name: setInchesToFeet
+void setInchesToFeet()
 {
-  for (int i=0; i<arrayValue.length; i++)
+  int feet=0;
+  int inches=0;
+  float conversionRate = 0.0833333;
+  float floatingFeet;
+  for (int i=0; i < modulesTrueCount; i++)
   {
-    if (debug) println(arrayName+"["+i+"] = "+arrayValue[i]);
+    floatingFeet = moduleDimension_length_in[i]*conversionRate;
+    feet = int(floatingFeet);
+    inches = int(((floatingFeet) % feet)*12);
+    module_length_ft[i] = feet;
+    module_length_in[i] = inches;
+    
+    floatingFeet = moduleDimension_width_in[i]*conversionRate;
+    feet = int(floatingFeet);
+    inches = int(((floatingFeet) % feet)*12);
+    module_width_ft[i] = feet;
+    module_width_in[i] = inches;
   }
-}
+  printArrayInt("module_length_ft", module_length_ft);
+  printArrayInt("module_length_in", module_length_in);
+  printArrayInt("module_width_ft", module_width_ft);
+  printArrayInt("module_width_in", module_width_in);
+} // setInchesToFeet
 
-void getModulesHeader()
+// object name: setModulesArrays
+void setModulesArrays()
 {
+  int columnCount = 10;
+  int trueCount = 0;
   String[] lines;
-
   lines = loadStrings(modulesFileName);
-  for (int x=0; x < 1; x++)
+  for (int x=0; x < lines.length; x++)
   {
     String[] pieces = split(lines[x], '\t');
-    modulesHeader = new String[pieces.length-1];
-    for (int i=1; i < pieces.length; i++)
+    if (boolean(pieces[0]) == true)
     {
-      modulesHeader[i-1] = pieces[i];
+      installationCompanyName[trueCount] = pieces[1];
+      moduleCompanyName[trueCount] = pieces[2];
+      moduleType[trueCount] = pieces[3];
+      powerOutput[trueCount] = int(pieces[4]);
+      moduleDimension_length_mm[trueCount] = float(pieces[5]);
+      moduleDimension_width_mm[trueCount] = float(pieces[6]);
+      moduleDimension_height_mm[trueCount] = float(pieces[7]);
+      if (moduleDimension_length_mm[trueCount] != 0.0f)
+      {
+        moduleDimension_length_in[trueCount] = float(pieces[5])*mm_to_in_conversion_rate;
+        moduleDimension_width_in[trueCount] = float(pieces[6])*mm_to_in_conversion_rate;
+        moduleDimension_height_in[trueCount] = float(pieces[7])*mm_to_in_conversion_rate;
+      }
+      else
+      {
+        moduleDimension_length_in[trueCount] = float(pieces[8]);
+        moduleDimension_width_in[trueCount] = float(pieces[9]);
+        moduleDimension_height_in[trueCount] = float(pieces[10]);
+      }
+      trueCount++;
     }
   }
-  printStringArray("modulesHeader", modulesHeader);
-}
+  modulesDetailL = new String[columnCount*(trueCount-1)];
+  modulesDetailR = new String[columnCount*(trueCount-1)];
+  printArrayString("installationCompanyName", installationCompanyName);
+  printArrayString("moduleCompanyName", moduleCompanyName);
+  printArrayString("moduleType", moduleType);
+  printArrayInt("powerOutput", powerOutput);
+  printArrayFloat("moduleDimension_length_mm", moduleDimension_length_mm);
+  printArrayFloat("moduleDimension_width_mm", moduleDimension_width_mm);
+  printArrayFloat("moduleDimension_height_mm", moduleDimension_height_mm);
+  printArrayFloat("moduleDimension_length_in", moduleDimension_length_in);
+  printArrayFloat("moduleDimension_width_in", moduleDimension_width_in);
+  printArrayFloat("moduleDimension_height_in", moduleDimension_height_in);
+} // setModulesArrays
 
-void getTargetAreasHeader()
+//------------------------------------------------------
+// object name: setModulesCounts
+//
+// PURPOSE: this function initializes the module counts to zero
+// PARAMETERS:
+//        none
+// Returns:
+//        none
+//------------------------------------------------------
+void setModulesCounts()
 {
-  String[] lines;
+  countmodulesAdditional = 0;
+  countmodulesUnderlay = 0;
+  countmodulesOverlay = 0;
+  countmodulesTotal = 0;
+} // setModulesCounts
 
-  lines = loadStrings(targetAreasFileName);
-  for (int x=0; x < 1; x++)
+// object name: setModulesDetail
+void setModulesDetail()
+{
+  boolean left = true;
+  int columnCount;
+  String[] lines;
+  lines = loadStrings(modulesFileName);
+  for (int x=0; x < lines.length; x++)
   {
+    columnCount = 0;
     String[] pieces = split(lines[x], '\t');
-    targetAreasHeader = new String[pieces.length-1];
-    for (int i=1; i < pieces.length; i++)
+    if (boolean(pieces[0]) == true)
     {
-      targetAreasHeader[i-1] = pieces[i];
+      if (left)
+      {
+        left = false;
+        for (int i=1; i < pieces.length; i++)
+        {
+          modulesDetailL[columnCount] = pieces[i];
+          columnCount++;
+        }
+      }
+      else
+      {
+        for (int i=1; i < pieces.length; i++)
+        {
+          modulesDetailR[columnCount] = pieces[i];
+          columnCount++;
+        }
+      }
     }
   }
-  printStringArray("targetAreasHeader", targetAreasHeader);
-}
+  printArrayString("modulesDetailL", modulesDetailL);
+  printArrayString("modulesDetailR", modulesDetailR);
+} // setModulesDetail
+
+//------------------------------------------------------
+// object name: setSizeBuffer
+//
+// PURPOSE: this function sets the buffer sizes
+// PARAMETERS:
+//        none
+// Returns:
+//        none
+//------------------------------------------------------
+void setSizeBuffer(int targetAreaIndex)
+{
+  nbufferN = obufferN;
+  nbufferE = obufferE;
+  nbufferS = obufferS;
+  nbufferW = obufferW;
+  if (eavestroughN[targetAreaIndex]) nbufferN = bufferEavestrough;
+  if (eavestroughE[targetAreaIndex]) nbufferE = bufferEavestrough;
+  if (eavestroughS[targetAreaIndex]) nbufferS = bufferEavestrough;
+  if (eavestroughW[targetAreaIndex]) nbufferW = bufferEavestrough;
+} // setSizeBuffer
+
+//------------------------------------------------------
+// object name: setSizeRect
+//
+// PURPOSE: this function sets the big and inner rectangle size
+// PARAMETERS:
+//        none
+// Returns:
+//        none
+//------------------------------------------------------
+void setSizeRect(int targetAreaIndex)
+{
+  rectBigWidth = (targetArea_width_ft[targetAreaIndex]*12)+targetArea_width_in[targetAreaIndex];
+  rectBigLength = (targetArea_length_ft[targetAreaIndex]*12)+targetArea_length_in[targetAreaIndex];
+  rectInnerWidth = rectBigWidth - (nbufferW+nbufferE);
+  rectInnerLength = rectBigLength - (nbufferN+nbufferS);
+} // setSizeRect
+
+//------------------------------------------------------
+// object name: setSizes
+//
+// PURPOSE: this function sets the following:
+//          1. setSizeBuffer
+//          2. setSizeRect
+//          3. setXY_Rect
+//          4. setXY_Module
+// PARAMETERS:
+//        none
+// Returns:
+//        none
+//------------------------------------------------------
+void setSizes(int targetAreaIndex)
+{
+  setSizeBuffer(targetAreaIndex);
+  setSizeRect(targetAreaIndex);
+  setXY_Rect();
+  setXY_Module();
+} // setSizes
+
+// object name: setTargetAreasArrays
+void setTargetAreasArrays()
+{
+  int columnCount = 11;
+  int trueCount = 0;
+  String[] lines;
+  lines = loadStrings(targetAreasFileName);
+  for (int x=0; x < lines.length; x++)
+  {
+    String[] pieces = split(lines[x], '\t');
+    if (boolean(pieces[0]) == true)
+    {
+      sideOfTheHouse[trueCount] = pieces[1];
+      centerThemodules[trueCount] = boolean(pieces[2]);
+      justifyThemodules[trueCount] = boolean(pieces[3]);
+      eavestroughN[trueCount] = boolean(pieces[4]);
+      eavestroughE[trueCount] = boolean(pieces[5]);
+      eavestroughS[trueCount] = boolean(pieces[6]);
+      eavestroughW[trueCount] = boolean(pieces[7]);
+      targetArea_length_ft[trueCount] = int(pieces[8]);
+      targetArea_length_in[trueCount] = int(pieces[9]);
+      targetArea_width_ft[trueCount] = int(pieces[10]);
+      targetArea_width_in[trueCount] = int(pieces[11]);
+      trueCount++;
+    }
+  }
+  targetAreasDetail = new String[columnCount*trueCount];
+  printArrayString("sideOfTheHouse", sideOfTheHouse);
+  printArrayBoolean("centerThemodules", centerThemodules);
+  printArrayBoolean("justifyThemodules", justifyThemodules);
+  printArrayBoolean("eavestroughN", eavestroughN);
+  printArrayBoolean("eavestroughE", eavestroughE);
+  printArrayBoolean("eavestroughS", eavestroughS);
+  printArrayBoolean("eavestroughW", eavestroughW);
+  printArrayInt("targetArea_length_ft", targetArea_length_ft);
+  printArrayInt("targetArea_length_in", targetArea_length_in);
+  printArrayInt("targetArea_width_ft", targetArea_width_ft);
+  printArrayInt("targetArea_width_in", targetArea_width_in);
+} // setTargetAreasArrays
+
+// object name: setTargetAreasDetail
+void setTargetAreasDetail()
+{
+  int columnCount = 0;
+  String[] lines;
+  lines = loadStrings(targetAreasFileName);
+  for (int x=0; x < lines.length; x++)
+  {
+    String[] pieces = split(lines[x], '\t');
+    if (boolean(pieces[0]) == true)
+    {
+      for (int i=1; i < pieces.length; i++)
+      {
+        targetAreasDetail[columnCount] = pieces[i];
+        columnCount++;
+      }
+    }
+  }
+  printArrayString("targetAreasDetail", targetAreasDetail);
+} // setTargetAreasDetail
+
+//------------------------------------------------------
+// object name: setXY_Module
+//
+// PURPOSE: this function sets the landscape and portrait solar module x y starting coordinates
+// PARAMETERS:
+//        none
+// Returns:
+//        none
+//------------------------------------------------------
+void setXY_Module()
+{
+  moduleLandX[0] = int(rectInnerLength/moduleDimension_width_in[0]);
+  moduleLandY[0] = int(rectInnerWidth/moduleDimension_length_in[0]);
+  moduleLandX[1] = int(rectInnerLength/moduleDimension_width_in[1]);
+  moduleLandY[1] = int(rectInnerWidth/moduleDimension_length_in[1]);
+  modulePortX[0] = int(rectInnerWidth/moduleDimension_width_in[0]);
+  modulePortY[0] = int(rectInnerLength/moduleDimension_length_in[0]);
+  modulePortX[1] = int(rectInnerWidth/moduleDimension_width_in[1]);
+  modulePortY[1] = int(rectInnerLength/moduleDimension_length_in[1]);
+} // setXY_Module
+
+//------------------------------------------------------
+// object name: setXY_Rect
+//
+// PURPOSE: this function sets the big and inner rectangle x y starting coordinates
+// PARAMETERS:
+//        none
+// Returns:
+//        none
+//------------------------------------------------------
+void setXY_Rect()
+{
+  for (int i = 0; i < rectBigX.length; i++)
+  {
+    rectBigX[i] = rectBigWidth*i+rectSpacerVertical*i+WHITE_SPACE;
+    rectBigY[i] = 0;
+    
+    rectInnerX[i] = rectBigWidth*i+rectSpacerVertical*i+WHITE_SPACE+nbufferW;
+    rectInnerY[i] = nbufferN;
+  }
+  for (int i = 0; i < roofVentX.length; i++)
+  {
+    roofVentX[i] = rectBigWidth*i+rectSpacerVertical*i+WHITE_SPACE+nbufferW;
+    roofVentY[i] = nbufferN;
+  }
+} // setXY_Rect   
